@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
+from scipy.spatial import KDTree
 
 import math
 
@@ -37,8 +38,11 @@ class WaypointUpdater(object):
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # TODO: Add other member variables you need below
-
         self.pose = None
+
+        self.base_waypoints = None
+        self.waypoints_2d = None
+        self.waypoint_tree = None
 
         rospy.spin()
 
@@ -47,8 +51,30 @@ class WaypointUpdater(object):
         pass
 
     def waypoints_cb(self, waypoints):
-        # TODO: Implement
-        pass
+
+        # message styx_msgs/Lane has following structure:
+        # std_msgs/Header header
+        #     ...
+        # styx_msgs/Waypoint[] waypoints
+        #     geometry_msgs/PoseStamped pose
+        #         std_msgs/Header header
+        #             ...
+        #         geometry_msgs/Pose pose
+        #             geometry_msgs/Point position
+        #                 float64 x
+        #                 float64 y
+        #                 float64 z
+        # ...
+
+        # Base waypoints are sent only once and never changed later, store them for later use
+        self.base_waypoints = waypoints
+
+        # Store a KDTree structure. We will later use it to efficiently find a waypoint closest to car position
+        if not self.waypoints_2d:   
+            # Extract 2d coordinnates from waypoint positions
+            self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoint_tree = KDTree(self.waypoints_2d)
+
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
