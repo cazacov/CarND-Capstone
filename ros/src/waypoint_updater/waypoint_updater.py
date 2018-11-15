@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
+import numpy as np
+
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
@@ -44,7 +46,55 @@ class WaypointUpdater(object):
         self.waypoints_2d = None
         self.waypoint_tree = None
 
-        rospy.spin()
+        self.loop()
+    
+    def loop(self):
+        rate = rospy.Rate(50)   # Target 50 Hz publishing frequency
+        while not rospy.is_shutdown():
+            if self.pose and self.base_waypoints:   # Internal state is initialized by callbacks
+                # Find index of waypoint closest to car position
+                closest_waypoint_idx = self.get_closest_waypoint_idx()
+                self.publish_waypoints(closest_waypoint_idx)
+            rate.sleep()
+
+    def get_closest_waypoint_idx(self):
+        # Car coordinates
+        x = self.pose.pose.position.x
+        y = self.pose.pose.position.y
+
+        # Use KDTree to find 1 waypoint closest to car coordinates
+        closest_idx = self.waypoint_tree.query([x,y], 1)[1]
+
+        # Ensure the waypoint is in front of the car
+        closest_coord = self.waypoints_2d[closest_idx]
+        prev_coord = self.waypoints_2d[closest_idx - 1]
+
+        # Check if closest coord is ahead or behind car
+        cl_vect = np.array(closest_coord)
+        prev_vect = np.array(prev_coord)
+        pos_vect = np.array([x,y])
+
+        # Check in angle between (cl_vect - prev_vect) and (pos_vect - cl_vect) vectors is less or greater than 90 degrees
+
+        val = np.dot(cl_vect-prev_vect, pos_vect-cl_vect)
+
+        if val > 0:     # cosine of angle > 0  =>  angle < 90 degrees  =>  point cl_vect is behind the car
+            # take next point considering the length of array
+            closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
+        
+        return closest_idx
+
+    def publish_waypoints(self, closest_idx):
+        lane = Lane()   # create Lane message
+        lane.header = self.base_waypoints.header    # Use the same header
+
+        # Slice next 200 waypoints starting form the closest_idx
+        # The Python slice function is smart enough and does not crash if closest_idx + LOOKAHEAD_WPS is greater then the array length
+        lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
+
+        # Publish to final_waypoints topic
+        self.final_waypoints_pub.publish(lane)
+
 
     def pose_cb(self, msg):
         self.pose = msg
