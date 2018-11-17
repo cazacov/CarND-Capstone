@@ -31,7 +31,7 @@ class Controller(object):
         ki = 0.1
         kd = 0
         mn = 0      # Minimum throttle value
-        mx = 0.2    # Maximum throttle value
+        mx = 0.5    # Maximum throttle value
         self.throttle_controller = PID(kp, ki, kd, mn, mx)
 
         tau = 0.5
@@ -49,7 +49,7 @@ class Controller(object):
             return 0.,0.,0.
 
         # Apply low-pass filter
-        #current_vel = self.vel_lpf.filt(current_vel)
+        current_vel = self.vel_lpf.filt(current_vel)
 
         steering = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
 
@@ -58,6 +58,7 @@ class Controller(object):
 
         current_time = rospy.get_time()
         sample_time = current_time - self.last_time
+        self.last_time = current_time
 
         throttle = self.throttle_controller.step(velocity_error, sample_time)
         brake = 0
@@ -68,7 +69,7 @@ class Controller(object):
         elif throttle < 0.1 and velocity_error < 0:
             throttle = 0
             decel = max(velocity_error, self.decel_limit)
-            brake = abs(decel) * self.vehicle_mass * self.wheel_radius  # Torque N*m
+            brake = abs(decel) * self.vehicle_mass * self.wheel_radius  # Torque Force * radius = (a * m) * r
 
 
         # Return throttle, brake, steer
