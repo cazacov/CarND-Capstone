@@ -79,7 +79,6 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
-        return
 
         light_wp, state = self.process_traffic_lights()
 
@@ -89,6 +88,9 @@ class TLDetector(object):
         of times till we start using it. Otherwise the previous stable state is
         used.
         '''
+
+        rospy.logwarn("Light waypoint: %s,  state %s", light_wp, state )
+
         if self.state != state:
             self.state_count = 0
             self.state = state
