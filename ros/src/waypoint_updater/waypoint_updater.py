@@ -36,7 +36,7 @@ class WaypointUpdater(object):
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-        rospy.Subscriber('/trafic_waypoint', Int32, self.traffic_cb)
+        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
 
@@ -107,21 +107,26 @@ class WaypointUpdater(object):
             lane.waypoints = base_waypoints
         else:
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
+
         return lane
 
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 3, 0)   # Three waypoints back from line
+        rospy.logwarn("Decelerating waypoints from %s to %s, s-idx: %s", closest_idx, self.stopline_wp_idx, stop_idx)
+        
         for i, wp in enumerate(waypoints):
             p = Waypoint()
             p.pose = wp.pose
 
-            stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0)   # Two waypoints back from line
             dist = self.distance(waypoints, i, stop_idx)
             vel = math.sqrt(2 * MAX_DECEL * dist)
             if vel < 1.:
                 vel = 0.
+
+            #rospy.logwarn("i: %s, dist: %s vel: %s", i, dist, vel)
             
-            p.twist.twist.linear.x = min(vel, p.twist.twist.linear.x)
+            p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
             temp.append(p)
 
         return temp
@@ -160,7 +165,8 @@ class WaypointUpdater(object):
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
         self.stopline_wp_idx = msg.data
-        pass
+#        rospy.logwarn("Stoplight waypoint: %s", self.stopline_wp_idx )
+        
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later

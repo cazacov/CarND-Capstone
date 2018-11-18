@@ -91,7 +91,7 @@ class TLDetector(object):
         used.
         '''
 
-        rospy.logwarn("Light waypoint: %s,  state %s,   distance: %s", light_wp, state, dist )
+        #rospy.logwarn("Light waypoint: %s,  state %s,   distance: %s", light_wp, state, dist )
 
         if self.state != state:
             self.state_count = 0
