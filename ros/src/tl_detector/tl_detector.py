@@ -13,6 +13,8 @@ import yaml
 
 from scipy.spatial import KDTree
 
+import math
+
 STATE_COUNT_THRESHOLD = 3
 
 class TLDetector(object):
@@ -80,7 +82,7 @@ class TLDetector(object):
         self.has_image = True
         self.camera_image = msg
 
-        light_wp, state = self.process_traffic_lights()
+        light_wp, state, dist = self.process_traffic_lights()
 
         '''
         Publish upcoming red lights at camera frequency.
@@ -89,7 +91,7 @@ class TLDetector(object):
         used.
         '''
 
-        rospy.logwarn("Light waypoint: %s,  state %s", light_wp, state )
+        rospy.logwarn("Light waypoint: %s,  state %s,   distance: %s", light_wp, state, dist )
 
         if self.state != state:
             self.state_count = 0
@@ -139,6 +141,19 @@ class TLDetector(object):
         # return self.light_classifier.get_classification(cv_image)
         return light.state
 
+    def distance(self, waypoints, wp1, wp2):
+        """Computes the distance between two waypoints in a list along the piecewise linear arc
+           connecting all waypoints between the two
+        Returns:
+            number: distance in meters
+        """
+        dist = 0
+        dl = lambda a, b: math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2  + (a.z-b.z)**2)
+        for i in range(wp1, wp2+1):
+            dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
+            wp1 = i
+        return dist
+
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
             location and color
@@ -168,10 +183,11 @@ class TLDetector(object):
                     line_wp_idx = temp_wp_idx
             
         if closest_light:
+            dist =self.distance(self.waypoints.waypoints, car_wp_idx, line_wp_idx)
             state = self.get_light_state(closest_light)
-            return line_wp_idx, state
+            return line_wp_idx, state, dist
 
-        return -1, TrafficLight.UNKNOWN
+        return -1, TrafficLight.UNKNOWN, -1
 
 if __name__ == '__main__':
     try:
