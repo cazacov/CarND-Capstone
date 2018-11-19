@@ -112,23 +112,50 @@ class WaypointUpdater(object):
 
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        stop_idx = max(self.stopline_wp_idx - closest_idx - 3, 0)   # Three waypoints back from line
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 4, 0)   # Three waypoints back from line
         rospy.logwarn("Decelerating waypoints from %s to %s, s-idx: %s", closest_idx, self.stopline_wp_idx, stop_idx)
-        
+
         for i, wp in enumerate(waypoints):
             p = Waypoint()
             p.pose = wp.pose
 
-            dist = self.distance(waypoints, i, stop_idx)
-            vel = math.sqrt(2 * MAX_DECEL * dist)
-            if vel < 1.:
-                vel = 0.
-
-            #rospy.logwarn("i: %s, dist: %s vel: %s", i, dist, vel)
-            
-            p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
+            if i < stop_idx:
+                dist = self.distance(waypoints, i, stop_idx)
+                #### Default deceleration profile with constant negative acceleration = MAX_DECEL
+                vel = min(math.sqrt(2 * MAX_DECEL * dist), wp.twist.twist.linear.x)
+                if vel < 1.0:
+                    vel = 0.0
+                p.twist.twist.linear.x = vel
+            else:
+                p.twist.twist.linear.x = 0
             temp.append(p)
 
+###################################        
+#### Experimental more smooth deceleration profile with  a proportional to sin(distance*k)
+###################################
+
+        t = 0
+        s = 0
+        a = MAX_DECEL * 0.9
+
+        for i in reversed(xrange(stop_idx)):
+            dist = self.distance(waypoints, i, stop_idx)
+            v0 = waypoints[i].twist.twist.linear.x
+            s_max = math.pi * v0 * v0 / 4.0 / a
+            if dist < s_max:
+                T = math.pi * v0 / 2.0 / a
+                while s < dist:
+                    t = t + 0.005
+                    s = v0 / 2 * (t - T/math.pi*math.sin(t * math.pi/T))
+                v = v0 / 2 * (1 - math.cos(t*math.pi/T))
+                if v < 1:
+                    v = 0.
+                temp[i].twist.twist.linear.x = v
+                rospy.logwarn("i: %s dist: %s s:%s, v: %s", i, dist, s, v)
+            else:
+                break
+##############################    
+        
         return temp
 
 
