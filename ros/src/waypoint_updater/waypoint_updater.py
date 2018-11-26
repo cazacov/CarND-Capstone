@@ -138,18 +138,35 @@ class WaypointUpdater(object):
         s = 0
         a = MAX_DECEL * 0.9
 
+
+#             T = 1.1 * v0 * (math.pi - 2 * p) / 2
+#             p2 = (math.pi - 2*p) / T
+#             s_max = v0 / 2.0 * (T - 1.1 / p2 * math.sin(p2 * (T + p)))     
+#             if dist < s_max:
+#                 while s < dist:
+#                     t = t + 0.005
+#                     s = v0 / 2 * (t - 1.1 / T * math.sin(p2*(t + p)))
+#                 v = v0 / 2 * (1 - 1.1 * math.cos(p2 * (t + p)))
+
+
         for i in reversed(xrange(stop_idx)):
             dist = self.distance(waypoints, i, stop_idx)
             v0 = waypoints[i].twist.twist.linear.x
-            s_max = math.pi * v0 * v0 / 4.0 / a
+
+            T = math.pi * v0 / 2.0 / a
+            s_max =  T * v0 / 2
+
             if dist < s_max:
-                T = math.pi * v0 / 2.0 / a
+                
                 while s < dist:
                     t = t + 0.005
                     s = v0 / 2 * (t - T/math.pi*math.sin(t * math.pi/T))
                 v = v0 / 2 * (1 - math.cos(t*math.pi/T))
                 if v < 1:
                     v = 0.
+                if v > v0:
+                    v = v0
+
                 temp[i].twist.twist.linear.x = v
                 #rospy.logwarn("i: %s dist: %s s:%s, v: %s", i, dist, s, v)
             else:
