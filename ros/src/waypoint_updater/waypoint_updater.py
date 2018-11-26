@@ -113,7 +113,7 @@ class WaypointUpdater(object):
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
         stop_idx = max(self.stopline_wp_idx - closest_idx - 4, 0)   # Three waypoints back from line
-        rospy.logwarn("Decelerating waypoints from %s to %s, s-idx: %s", closest_idx, self.stopline_wp_idx, stop_idx)
+        #rospy.logwarn("Decelerating waypoints from %s to %s, s-idx: %s", closest_idx, self.stopline_wp_idx, stop_idx)
 
         for i, wp in enumerate(waypoints):
             p = Waypoint()
@@ -151,7 +151,7 @@ class WaypointUpdater(object):
                 if v < 1:
                     v = 0.
                 temp[i].twist.twist.linear.x = v
-                rospy.logwarn("i: %s dist: %s s:%s, v: %s", i, dist, s, v)
+                #rospy.logwarn("i: %s dist: %s s:%s, v: %s", i, dist, s, v)
             else:
                 break
 ##############################    

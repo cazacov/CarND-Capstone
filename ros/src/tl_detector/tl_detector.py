@@ -10,6 +10,8 @@ from light_classification.tl_classifier import TLClassifier
 import tf
 import cv2
 import yaml
+import time
+from random import randint
 
 from scipy.spatial import KDTree
 
@@ -27,6 +29,7 @@ class TLDetector(object):
         self.waypoint_tree = None
         self.camera_image = None
         self.lights = []
+        self.image_count = 0
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -120,7 +123,7 @@ class TLDetector(object):
 
         return closest_idx
 
-    def get_light_state(self, light):
+    def get_light_state(self, light, dist):
         """Determines the current color of the traffic light
 
         Args:
@@ -137,9 +140,29 @@ class TLDetector(object):
 
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
+        # Store image for classifier training
+        status_map = {0:'red', 1:'yellow', 2:'green'}
+        timestamp = time.strftime("%Y%m%d-%H%M%S") 
+        self.image_count += 1
+
+        # if (dist > 6 and dist < 100):
+        #     filename = '/home/victor/udacity/CarND-Capstone/ros/training_data/%s-%s-%d.jpg' % (status_map[light.state], timestamp, self.image_count)
+        #     rospy.logwarn("%s %s", dist, filename)
+        #     cv2.imwrite(filename, cv_image)
+
+        # if dist > 300 and randint(0, 10) == 0:
+        #     filename = '/home/victor/udacity/CarND-Capstone/ros/training_data/unknown-%s-%d.jpg' % (timestamp, self.image_count)
+        #     rospy.logwarn("%s %s", dist, filename)
+        #     cv2.imwrite(filename, cv_image)
+
         #Get classification
-        # return self.light_classifier.get_classification(cv_image)
-        return light.state
+        result = self.light_classifier.get_classification(cv_image)
+
+        if light.state is not None and light.state != result and 6 < dist < 75:
+            rospy.logwarn("Classifier returned wrong result! Expected %s  got %s", light.state, result)
+
+        return result
+        #return light.state
 
     def distance(self, waypoints, wp1, wp2):
         """Computes the distance between two waypoints in a list along the piecewise linear arc
@@ -184,7 +207,7 @@ class TLDetector(object):
             
         if closest_light:
             dist =self.distance(self.waypoints.waypoints, car_wp_idx, line_wp_idx)
-            state = self.get_light_state(closest_light)
+            state = self.get_light_state(closest_light, dist)
             return line_wp_idx, state, dist
 
         return -1, TrafficLight.UNKNOWN, -1
