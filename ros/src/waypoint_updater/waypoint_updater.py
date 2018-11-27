@@ -137,32 +137,28 @@ class WaypointUpdater(object):
         t = 0
         s = 0
         a = MAX_DECEL * 0.9
-
-
-#             T = 1.1 * v0 * (math.pi - 2 * p) / 2
-#             p2 = (math.pi - 2*p) / T
-#             s_max = v0 / 2.0 * (T - 1.1 / p2 * math.sin(p2 * (T + p)))     
-#             if dist < s_max:
-#                 while s < dist:
-#                     t = t + 0.005
-#                     s = v0 / 2 * (t - 1.1 / T * math.sin(p2*(t + p)))
-#                 v = v0 / 2 * (1 - 1.1 * math.cos(p2 * (t + p)))
-
+        scale = 1.1
+        p = math.acos(1.0 / scale)
 
         for i in reversed(xrange(stop_idx)):
             dist = self.distance(waypoints, i, stop_idx)
             v0 = waypoints[i].twist.twist.linear.x
 
-            T = math.pi * v0 / 2.0 / a
-            s_max =  T * v0 / 2
+            #T = math.pi * v0 / 2.0 / a
+            T = scale * v0 * (math.pi - 2.0 * p) / (2.0  * a)
+            p2 = (math.pi - 2.0 * p) / T
+
+            #s_max =  T * v0 / 2
+            s_max =  v0 / 2.0 *  (T - scale / p2 * math.sin(p2 * T + p) + scale / p2 * math.sin(p2 * 0 + p))    
 
             if dist < s_max:
-                
                 while s < dist:
                     t = t + 0.005
-                    s = v0 / 2 * (t - T/math.pi*math.sin(t * math.pi/T))
-                v = v0 / 2 * (1 - math.cos(t*math.pi/T))
-                if v < 1:
+                    #s = v0 / 2 * (t - T/math.pi*math.sin(t * math.pi/T))
+                    s = v0 / 2 * (t - scale / p2 * math.sin(p2*t + p) + scale / p2 * math.sin(p))
+                #v = v0 / 2 * (1 - math.cos(t*math.pi/T))
+                v = v0 / 2 * (1 - scale * math.cos(p2 * t + p))
+                if v < 0.2:
                     v = 0.
                 if v > v0:
                     v = v0
