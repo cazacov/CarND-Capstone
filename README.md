@@ -47,14 +47,20 @@ git clone https://github.com/udacity/CarND-Capstone.git
 cd CarND-Capstone
 pip install -r requirements.txt
 ```
-3. Make and run styx
+
+3. Install [ROS](http://wiki.ros.org/melodic/Installation/Ubuntu) and dbw-mkz package
+```bash
+sudo apt-get install ros-melodic-dbw-mkz
+```
+
+4. Make and run styx
 ```bash
 cd ros
 catkin_make
 source devel/setup.sh
 roslaunch launch/styx.launch
 ```
-4. Run the simulator
+5. Run the simulator
 
 ### Real world testing
 1. Download [training bag](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/traffic_light_bag_file.zip) that was recorded on the Udacity self-driving car.
