@@ -5,19 +5,19 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 ## Smooth Acceleration Profile
 
-In reallity the car will decelerate in order to stop, starting with initial velocity v0. To make calculations simplier, it's convenient to reverse the time and think car is accelerating from initial v = 0 to final v = v0 in T seconds.
+In reallity the car will decelerate in order to stop, changing its velocity from v0 to 0. To make calculations simplier, it's convenient to reverse the time axis and think of car as accelerating from initial v = 0 to final v = v0 in T seconds.
 
 Simple waypoint velocity calculation algorithm proposed at Udacity project walkthrough is easy to implement, but it has one drawback: the car starts to brake abruptly causing high jerk that is not comfortable for passengers:
 
 ![Constant acceleration](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/constant_acceleration.png?raw=true)
 
-To reduce maximum jerk I decided to take as acceleration function a part of sine wave that has max slope of 1.
+To reduce maximum jerk I decided to take al half of sine wave as acceleration function. Jerk is the first derivative of acceleration and has maximum value of 1 for the sine curve.
 
 ![Sine wave](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/sine_profile.png?raw=true)
 
 In case of smooth deceleration profile the velocity at the end of braking distance is close to 0 with slope also close to 0 and that makes the PID controller unstable. The calculated velocity tends to oscilate around 0 sometimes getting small negative values. In simulator that means the car stops before the stopline, waits a little and then again moves couple of centimeters forward before stopping completely. Well, when I just got my driving license it was probably the way I was driving, but we want the smart car be better than a newbie human.
 
-To make velocity curve more PID-friendly I decided to take only the middle 80% of it, cutting 10% on both sides. After calculating derivatives and antiderivatives I got the following formulae:
+To make velocity curve more PID-friendly I decided to take only the middle part it, cutting about 10% on both sides. After calculating derivatives and antiderivatives I got the following formulae:
 
 ![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/acceleration_profile_math.png?raw=true)
 
@@ -25,7 +25,7 @@ The constant of integration is chosen to make s(0) = 0
 
 ![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/smooth_acceleration.png?raw=true)
 
-It can be easily proved that s(t) is bijective and must have inverse function in the range [0..T], but unfortunately it cannot be expressed in terms of standard matematical functions. In code I solve this problem numerically just incrementing time in small steps till I get the desired distance. Then, knowing the time, I can easily calculate velocity at that waypoint (waypoint_updater.py lines 155-158).
+It can be easily proved that s(t) is bijective and must have inverse function in the range [0..T], but unfortunately it cannot be expressed in terms of standard matematical functions. In code I solve this problem numerically by incrementing time in small steps till I get the desired distance. Then, knowing the time, I can easily calculate velocity at that waypoint (waypoint_updater.py lines 155-158).
 
 ## Traffic Light Detector
 
@@ -41,23 +41,25 @@ Traffic light has following properties that can simplify detection:
 
 To detect traffic lights on camera image I first convert it to HSV color space using opencv function. Pixels with low intensity or low color saturation are masked. Then I apply range masks to H channel to get red, yellow and green pixels.
 
-![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/masks.png?raw=true)
+![HSV masks](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/masks.png?raw=true)
 
 ### Use Hough Circle Transform to detect circles
 
-The range filtering above works pretty well for clean simulator images. In real condistions there can be a lot of nose because of other colored objects, reflections, etc. Do be sure we are detecting a traffic light we need aditionally check if masked pixels have form of one or several circles.
+The range filtering above works pretty well for clean simulator images. In real condistions there can be a lot of nose because of other colored objects, reflections, etc. Do be sure we are detecting a traffic light we need aditionally check if masked pixels have form of one or several circles. To do that I use Hough Circle Transformation, similar to the lane finding project in previous nanondegree course. 
 
 OpenCV documentation: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_houghcircles/py_houghcircles.html
 
-![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/hough.png?raw=true)
+![Hough Circles](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/hough.png?raw=true)
+
+The capstone project environment is based on python 2.7. It was more convenient to write detection algorithm in Jupyter Notebook in Python 3 finally copy it in ROS node code. This notebook can be found in a separate GitHub repository: https://github.com/cazacov/traffic-light-classificator/blob/master/classificator-opencv.ipynb
 
 ## ROS Topic with Detector Output
 
-The Traffic Light Detection node was extended with a new topic "/traffic_light_detected", message type: sensor_msgs/Image. After processing camera image the traffic light classifier creates a new image with marked traffic lights and their color. That is useful for debugging puposes. To view topic message stream in real type run
+The Traffic Light Detection node was extended with a new topic "/traffic_light_detected", message type: sensor_msgs/Image. After processing camera image the traffic light classifier creates a new image with marked traffic lights and their color. That is useful for debugging purposes. To view topic message stream in real type run
 ```bash
 rqt_image_view /traffic_light_detected
 ```
-Here on the screen cas you can see two image streams on the right hand side. The top one is raw camera output as provided by simulator and at the bottom there is the processed version:
+On recorded screencast you can see two image streams on the right-hand side. The top one is raw camera output as provided by simulator. Bottom-right window shows the processed version:
 
 ![Screencast](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/anim.gif?raw=true)
 
