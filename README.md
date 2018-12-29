@@ -3,6 +3,15 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 ![Screenshot](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/screenshot.jpg?raw=true)
 
+## ROS Topic with Detector Output
+
+![Screencast](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/anim.gif?raw=true)
+
+## Smooth Acceleration Profile
+
+## Traffic Light Detector
+
+## Setup
 Please use **one** of the two installation options, either native **or** docker installation.
 
 ### Native Installation
