@@ -48,6 +48,7 @@ class TLDetector(object):
         self.config = yaml.load(config_string)
 
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
+        self.traffic_light_detected_pub = rospy.Publisher('/traffic_light_detected', Image, queue_size=1)
 
         self.bridge = CvBridge()
         self.light_classifier = TLClassifier()
@@ -140,11 +141,12 @@ class TLDetector(object):
 
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
-        # Store image for classifier training
-        status_map = {0:'red', 1:'yellow', 2:'green'}
-        timestamp = time.strftime("%Y%m%d-%H%M%S") 
-        self.image_count += 1
 
+        # Store image for classifier training
+
+        # status_map = {0:'red', 1:'yellow', 2:'green'}
+        # timestamp = time.strftime("%Y%m%d-%H%M%S") 
+        # self.image_count += 1
         # if (dist > 6 and dist < 100):
         #     filename = '/home/victor/udacity/CarND-Capstone/ros/training_data/%s-%s-%d.jpg' % (status_map[light.state], timestamp, self.image_count)
         #     rospy.logwarn("%s %s", dist, filename)
@@ -156,7 +158,9 @@ class TLDetector(object):
         #     cv2.imwrite(filename, cv_image)
 
         #Get classification
-        result = self.light_classifier.get_classification(cv_image)
+        result, detected_image = self.light_classifier.get_classification(cv_image)
+        msg_image = self.bridge.cv2_to_imgmsg(detected_image, "bgr8")
+        self.traffic_light_detected_pub.publish(msg_image)
 
         if light.state is not None and light.state != result and 6 < dist < 75:
             rospy.logwarn("Classifier returned wrong result! Expected %s  got %s", light.state, result)
