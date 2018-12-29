@@ -19,11 +19,15 @@ In case of smooth deceleration profile the velocity at the end of braking distan
 
 To make velocity curve more PID-friendly I decided to take only the middle 80% of it, cutting 10% on both sides. After calculating derivatives and antiderivatives I got the following formulae:
 
+![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/math_1.svg?raw=true)
+![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/math_2.svg?raw=true)
+![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/math_3.svg?raw=true)
+
 ![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/acceleration_profile_math.png?raw=true)
 
 ![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/smooth_acceleration.png?raw=true)
 
-It can be easily proved that s(t) is bijective and must have inverse function in the range [0..T], but unfortunately it cannot be expressed in terms of standard matematical functions. In code I solve this problem numerically just incrementing time in samll steps till I get the desired distance. Then, knowing the time, I can easily calculate velocity at that waypoint (waypoint_updater.py lines 155-158).
+It can be easily proved that s(t) is bijective and must have inverse function in the range [0..T], but unfortunately it cannot be expressed in terms of standard matematical functions. In code I solve this problem numerically just incrementing time in small steps till I get the desired distance. Then, knowing the time, I can easily calculate velocity at that waypoint (waypoint_updater.py lines 155-158).
 
 ## Traffic Light Detector
 
