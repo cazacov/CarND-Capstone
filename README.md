@@ -5,7 +5,25 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 ## Smooth Acceleration Profile
 
-Simple waypoint velocity calculation algorithm proposed at Udacity project walkthrough is easy to implement, but it has one drawback: the car starts to brake abruptly causing high jerk that is not comfortable for passengers
+In reallity the car will decelerate in order to stop, starting with initial velocity v0. To make calculations simplier, it's convenient to reverse the time and think car is accelerating from initial v = 0 to final v = v0 in T seconds.
+
+Simple waypoint velocity calculation algorithm proposed at Udacity project walkthrough is easy to implement, but it has one drawback: the car starts to brake abruptly causing high jerk that is not comfortable for passengers:
+
+![Constant acceleration](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/constant_acceleration.png?raw=true)
+
+To reduce maximum jerk I decided to take as acceleration function a part of sine wave that has max slope of 1.
+
+![Sine wave](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/sine_profile.png?raw=true)
+
+In case of smooth deceleration profile the velocity at the end of braking distance is close to 0 with slope also close to 0 and that makes the PID controller unstable. The calculated velocity tends to oscilate around 0 sometimes getting small negative values. In simulator that means the car stops before the stopline, waits a little and then again moves couple of centimeters forward before stopping completely. Well, when I just got my driving license it was probably the way I was driving, but we want the smart car be better than a newbie human.
+
+To make velocity curve more PID-friendly I decided to take only the middle 80% of it, cutting 10% on both sides. After calculating derivatives and antiderivatives I got the following formulae:
+
+![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/acceleration_profile_math.png?raw=true)
+
+![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/smooth_acceleration.png?raw=true)
+
+It can be easily proved that s(t) is bijective and must have inverse function in the range [0..T], but unfortunately it cannot be expressed in terms of standard matematical functions. In code I solve this problem numerically just incrementing time in samll steps till I get the desired distance. Then, knowing the time, I can easily calculate velocity at that waypoint (waypoint_updater.py lines 155-158).
 
 ## Traffic Light Detector
 
