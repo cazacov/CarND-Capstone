@@ -3,6 +3,8 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 ![Screenshot](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/screenshot.jpg?raw=true)
 
+Done by Victor Cazacov in 2018. Udacity account name: cazacov@gmail.com
+
 ## Acceleration Profiles
 
 In reallity the car will decelerate in order to stop, changing its velocity from v0 to 0. To make calculations simplier, it's convenient to reverse the time axis and think of car as accelerating from initial v = 0 to final v = v0 in T seconds.
