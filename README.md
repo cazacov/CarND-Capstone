@@ -20,9 +20,11 @@ To reduce maximum jerk I decided to take al half of sine wave as acceleration fu
 
 ![Sine wave](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/sine_profile.png?raw=true)
 
+### Making it PID-Friendly
+
 In case of smooth deceleration profile the velocity at the end of braking distance is close to 0 with slope also close to 0 and that makes the PID controller unstable. The calculated velocity tends to oscilate around 0 sometimes getting small negative values. In simulator that means the car stops before the stopline, waits a little and then again moves couple of centimeters forward before stopping completely. Well, when I just got my driving license it was probably the way I was driving, but we want the smart car be better than a newbie human.
 
-To make velocity curve more PID-friendly I decided to take only the middle part it, cutting about 10% on both sides. After calculating derivatives and antiderivatives I got the following formulae:
+To make velocity curve more sitable for PID controller I decided to take only the middle part it, cutting about 10% on both sides. After calculating derivatives and antiderivatives I got the following formulae:
 
 ![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/acceleration_profile_math.png?raw=true)
 
