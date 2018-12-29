@@ -62,6 +62,13 @@ roslaunch launch/styx.launch
 ```
 5. Run the simulator
 
+6. (Optional) View camera video stream
+```bash
+rqt_image_view /image_color
+```
+
+
+
 ### Real world testing
 1. Download [training bag](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/traffic_light_bag_file.zip) that was recorded on the Udacity self-driving car.
 2. Unzip the file
