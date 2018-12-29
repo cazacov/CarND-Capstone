@@ -19,17 +19,37 @@ In case of smooth deceleration profile the velocity at the end of braking distan
 
 To make velocity curve more PID-friendly I decided to take only the middle 80% of it, cutting 10% on both sides. After calculating derivatives and antiderivatives I got the following formulae:
 
-![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/math_1.svg?raw=true)
-![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/math_2.svg?raw=true)
-![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/math_3.svg?raw=true)
-
 ![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/acceleration_profile_math.png?raw=true)
+
+The constant of integration is chosen to make s(0) = 0
 
 ![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/smooth_acceleration.png?raw=true)
 
 It can be easily proved that s(t) is bijective and must have inverse function in the range [0..T], but unfortunately it cannot be expressed in terms of standard matematical functions. In code I solve this problem numerically just incrementing time in small steps till I get the desired distance. Then, knowing the time, I can easily calculate velocity at that waypoint (waypoint_updater.py lines 155-158).
 
 ## Traffic Light Detector
+
+### Preprocessing 
+Traffic light has following properties that can simplify detection:
+
+- It has high intensity (160..255)
+- It has high saturation(160..250)
+- It has one of three possible hue values:
+  - Red - -20 to 20 on scale 0 to 360 (-10 to 10 on scale 0..180 used be opencv)
+  - Yellow - 40 to 80 (20-40)
+  - Green - 110 to 150 (55-75)
+
+To detect traffic lights on camera image I first convert it to HSV color space using opencv function. Pixels with low intensity or low color saturation are masked. Then I apply range masks to H channel to get red, yellow and green pixels.
+
+![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/masks.png?raw=true)
+
+### Use Hough Circle Transform to detect circles
+
+The range filtering above works pretty well for clean simulator images. In real condistions there can be a lot of nose because of other colored objects, reflections, etc. Do be sure we are detecting a traffic light we need aditionally check if masked pixels have form of one or several circles.
+
+OpenCV documentation: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_houghcircles/py_houghcircles.html
+
+![Math](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/hough.png?raw=true)
 
 ## ROS Topic with Detector Output
 
