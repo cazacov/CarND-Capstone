@@ -3,13 +3,22 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 ![Screenshot](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/screenshot.jpg?raw=true)
 
+## Smooth Acceleration Profile
+
+Simple waypoint velocity calculation algorithm proposed at Udacity project walkthrough is easy to implement, but it has one drawback: the car starts to brake abruptly causing high jerk that is not comfortable for passengers
+
+## Traffic Light Detector
+
 ## ROS Topic with Detector Output
+
+The Traffic Light Detection node was extended with a new topic "/traffic_light_detected", message type: sensor_msgs/Image. After processing camera image the traffic light classifier creates a new image with marked traffic lights and their color. That is useful for debugging puposes. To view topic message stream in real type run
+```bash
+rqt_image_view /traffic_light_detected
+```
+Here on the screen cas you can see two image streams on the right hand side. The top one is raw camera output as provided by simulator and at the bottom there is the processed version:
 
 ![Screencast](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/anim.gif?raw=true)
 
-## Smooth Acceleration Profile
-
-## Traffic Light Detector
 
 ## Setup
 Please use **one** of the two installation options, either native **or** docker installation.
