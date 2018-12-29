@@ -3,13 +3,18 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 ![Screenshot](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/screenshot.jpg?raw=true)
 
-## Smooth Acceleration Profile
+## Acceleration Profiles
 
 In reallity the car will decelerate in order to stop, changing its velocity from v0 to 0. To make calculations simplier, it's convenient to reverse the time axis and think of car as accelerating from initial v = 0 to final v = v0 in T seconds.
+
+### Braking with Constant Acceleration:
+![Constant acceleration](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/constant_acceleration_profile.png?raw=true)
 
 Simple waypoint velocity calculation algorithm proposed at Udacity project walkthrough is easy to implement, but it has one drawback: the car starts to brake abruptly causing high jerk that is not comfortable for passengers:
 
 ![Constant acceleration](https://github.com/cazacov/CarND-Capstone/blob/master/imgs/constant_acceleration.png?raw=true)
+
+### Smooth Acceleration Profile 
 
 To reduce maximum jerk I decided to take al half of sine wave as acceleration function. Jerk is the first derivative of acceleration and has maximum value of 1 for the sine curve.
 
