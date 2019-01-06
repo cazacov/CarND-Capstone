@@ -160,7 +160,9 @@ class TLDetector(object):
         #Get classification
         result, detected_image = self.light_classifier.get_classification(cv_image)
         msg_image = self.bridge.cv2_to_imgmsg(detected_image, "bgr8")
-        self.traffic_light_detected_pub.publish(msg_image)
+
+        # For debugging publish detected images in a new topic
+        #self.traffic_light_detected_pub.publish(msg_image)
 
         if light.state is not None and light.state != result and 6 < dist < 75:
             rospy.logwarn("Classifier returned wrong result! Expected %s  got %s", light.state, result)
