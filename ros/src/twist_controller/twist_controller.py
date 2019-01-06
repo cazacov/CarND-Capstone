@@ -27,7 +27,7 @@ class Controller(object):
 
         self.yaw_controller = YawController(wheel_base, steer_ratio, 0.1, max_lat_accel, max_steer_angle)
 
-        kp = 0.4
+        kp = 0.3
         ki = 0.1
         kd = 0.1
         mn = 0      # Minimum throttle value
@@ -35,8 +35,9 @@ class Controller(object):
         self.throttle_controller = PID(kp, ki, kd, mn, mx)
 
         tau = 0.5
-        ts = 0.02
+        ts = 0.05
         self.vel_lpf = LowPassFilter(tau, ts)
+        self.yaw_lpf = LowPassFilter(tau, ts)
 
         self.last_vel = 0
         self.last_time = rospy.get_time()
@@ -46,12 +47,15 @@ class Controller(object):
 
         if not dbw_enabled:
             self.throttle_controller.reset()
+            self.vel_lpf.reset()
+            self.yaw_lpf.reset()
             return 0.,0.,0.
 
         # Apply low-pass filter
         current_vel = self.vel_lpf.filt(current_vel)
 
         steering = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
+        steering = self.yaw_lpf.filt(steering)
 
         velocity_error = linear_vel - current_vel
         self.last_vel = current_vel
@@ -65,7 +69,7 @@ class Controller(object):
 
         if linear_vel == 0 and current_vel < 0.1:
             throttle = 0
-            brake = 400
+            brake = 700     # To prevent Carla from moving requires about 700 Nm of torque.
         elif throttle < 0.1 and velocity_error < 0:
             throttle = 0
             decel = max(velocity_error, self.decel_limit)
